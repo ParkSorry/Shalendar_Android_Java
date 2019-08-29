@@ -66,17 +66,17 @@
 
             <EditText
                 android:id="@+id/search_Keyword"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="7"
+                android:layout_weight="8"
                 android:hint="검색어 입력" />
 
             <ImageButton
                 android:id="@+id/search_Schedule"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:layout_margin="3dp"
-                android:layout_weight="1"
-                android:adjustViewBounds="true"
                 android:background="@drawable/btn_search" />
 
         </LinearLayout>

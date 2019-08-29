@@ -30,6 +30,8 @@ public class SearchPlanActivity extends AppCompatActivity {
     //서버 연동
     NetWorkUrl url = new NetWorkUrl();
 
+
+    ImageButton backButton;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,7 +95,7 @@ public class SearchPlanActivity extends AppCompatActivity {
             }
         });
 
-        ImageButton backButton;
+
 
         backButton = findViewById(R.id.btn_back);
         backButton.setOnClickListener(new View.OnClickListener() {
