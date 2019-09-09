@@ -6,4 +6,11 @@
         <item name="android:statusBarColor">@color/colorStatusBar</item>
     </style>
 
+    <!--<style name="SpinnerTimePicker" parent="android:Theme_Dialog">-->
+        <!--<item name="android:timePickerMode">spinner</item>-->
+    <!--</style>-->
+
+
+
+
 </resources>

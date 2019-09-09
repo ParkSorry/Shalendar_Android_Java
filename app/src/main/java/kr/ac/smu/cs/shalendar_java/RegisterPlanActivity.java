@@ -22,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.app.TimePickerDialog;
 import android.widget.Toast;
 
 import com.google.gson.JsonArray;
@@ -105,6 +106,7 @@ public class RegisterPlanActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_plan);
+
 
         //삭제를위해
         RegisterplanclearActivity=RegisterPlanActivity.this;
@@ -449,7 +451,7 @@ public class RegisterPlanActivity extends AppCompatActivity {
         startTime.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                TimePickerDialog dialog = new TimePickerDialog(RegisterPlanActivity.this, new TimePickerDialog.OnTimeSetListener() {
+                TimePickerDialog dialog = new TimePickerDialog(RegisterPlanActivity.this,new TimePickerDialog.OnTimeSetListener() {
                     @Override
                     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
 
@@ -474,6 +476,7 @@ public class RegisterPlanActivity extends AppCompatActivity {
                         }
                     }
                 }, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), false);
+//                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
                 dialog.show();
             }
         });
