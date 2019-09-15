@@ -68,7 +68,7 @@ public class CreateCalendarActivity extends AppCompatActivity {
 
 
         //삭제를위해
-        CreateCalendarclearActivity=CreateCalendarActivity.this;
+        CreateCalendarclearActivity = CreateCalendarActivity.this;
 
         Intent intent = getIntent();
         int code = intent.getExtras().getInt("where");
@@ -148,8 +148,6 @@ public class CreateCalendarActivity extends AppCompatActivity {
                                     }
                                 }
                             });
-
-
                 }
             });
 
@@ -170,6 +168,7 @@ public class CreateCalendarActivity extends AppCompatActivity {
             checkPermissions();
 //        }
 
+            int flag = 0;
 
             Ion.getDefault(this).configure().setLogging("ion-sample", Log.DEBUG);
             Ion.getDefault(this).getConscryptMiddleware().enable(false);
@@ -182,6 +181,20 @@ public class CreateCalendarActivity extends AppCompatActivity {
             imageView = findViewById(R.id.imageView_createCal);
             calendarName = findViewById(R.id.calTitle_EditText_createCal);
             aboutCalendar = findViewById(R.id.aboutCal_EditText_createCal);
+
+            final int cid_old = intent.getIntExtra("cid", 0);
+            final String calImage_old = intent.getStringExtra("calImage");
+            String calName_old = intent.getStringExtra("calName");
+            String calContent_old = intent.getStringExtra("aboutCal");
+
+            //이전 data Set
+            Ion.with(imageView)
+                    .centerCrop()
+                    .placeholder(R.drawable.tempboardpic)
+                    .load(calImage_old);
+
+            calendarName.setText(calName_old);
+            aboutCalendar.setText(calContent_old);
 
 
             //갤러리에서 사진 가져오기 위한 ImageView리스너 구현
@@ -200,13 +213,18 @@ public class CreateCalendarActivity extends AppCompatActivity {
 
                     calName = calendarName.getText().toString().trim();
                     aboutCal = aboutCalendar.getText().toString().trim();
-                    String stringcid=Integer.toString(MainActivity.cid);
+                    String cid_update = Integer.toString(cid_old);
+
+
+                    if(imageURL == null) {
+                        imageURL = calImage_old;
+                    }
 
                     File file = new File(imageURL);
                     //서버 통신.
 
                     final ProgressDialog progressDialog = new ProgressDialog(CreateCalendarActivity.this);
-                    progressDialog.setMessage("공유 달력을 등록중입니다~");
+                    progressDialog.setMessage("공유 달력을 수정 중 입니다~");
                     progressDialog.setProgressStyle(progressDialog.STYLE_SPINNER);
                     progressDialog.show();
 
@@ -219,7 +237,7 @@ public class CreateCalendarActivity extends AppCompatActivity {
                             .setMultipartFile("file", file)
                             .setMultipartParameter("calName", calName)
                             .setMultipartParameter("calContent", aboutCal)
-                            .setMultipartParameter("cid", stringcid)
+                            .setMultipartParameter("cid", cid_update)
                             //응답형식
                             .asJsonObject()
                             .setCallback(new FutureCallback<JsonObject>() {
@@ -234,8 +252,10 @@ public class CreateCalendarActivity extends AppCompatActivity {
                                         String message = result.get("message").getAsString();
                                         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
 
-                                        if (message.equals("success"))
+                                        if (message.equals("success")) {
+                                            MainActivity.calName = calName;
                                             Dialog();
+                                        }
                                         else
                                             Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
                                     }

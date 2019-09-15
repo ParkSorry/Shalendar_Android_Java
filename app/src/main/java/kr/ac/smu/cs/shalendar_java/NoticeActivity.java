@@ -153,8 +153,8 @@ public class NoticeActivity extends AppCompatActivity {
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_license, container, false);
 
-            ((TextView) rootView.findViewById(R.id.sample1).findViewById(R.id.title)).setText("Sample 1");
-            ((TextView) rootView.findViewById(R.id.sample2).findViewById(R.id.title)).setText("Sample 2");
+            ((TextView) rootView.findViewById(R.id.sample1).findViewById(R.id.title)).setText("버전 정보");
+            ((TextView) rootView.findViewById(R.id.sample2).findViewById(R.id.title)).setText("개발자 정보");
 
             ExpandableTextView expTv1 = (ExpandableTextView) rootView.findViewById(R.id.sample1)
                     .findViewById(R.id.expand_text_view);

@@ -10,7 +10,11 @@
     <color name="subMainTextColor">#A4A4A4</color>
     <color name="buttonTextColor">#FFFFFF</color>
     <color name="appbarColor">#ffffff</color>
-    
+
+
+    <color name="calendarColor">#ff6067</color>
+
+
 
     <!--<color name="colorAccent">#EF7172</color>-->
 </resources>

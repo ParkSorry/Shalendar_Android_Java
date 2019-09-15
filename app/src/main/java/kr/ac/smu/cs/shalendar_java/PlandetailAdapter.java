@@ -10,6 +10,10 @@ public class PlandetailAdapter extends BaseAdapter {
 
     ArrayList<PlandetailItem> items = new ArrayList<PlandetailItem>();
 
+    public void clearItem() {
+        items.clear();
+    }
+
     public void addItem(PlandetailItem item) {
         items.add(item);
     }

@@ -189,6 +189,16 @@ public class BoarderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     Intent intent = new Intent(context, UpdatePlanActivity.class);
+
+                                    getScheduleFromServer(Global.getSid());
+//                                    intent.putExtra("sid_update", Global.getSid());
+//                                    intent.putExtra("scheTitle", boardList.get(getAdapterPosition()-1).getPlanname());
+//                                    intent.putExtra("startDate", boardList.get(getAdapterPosition()-1).dateandtime);
+//                                    intent.putExtra("startTime", boardList.get(getAdapterPosition()-1).getPlanname());
+//                                    intent.putExtra("endDate", boardList.get(getAdapterPosition()-1).getPlanname());
+//                                    intent.putExtra("endTime", boardList.get(getAdapterPosition()-1).getPlanname());
+//                                    intent.putExtra("aboutSche", boardList.get(getAdapterPosition()-1).ge);
+//                                    intent.putExtra("location", boardList.get(getAdapterPosition()-1).getLocation());
                                     context.startActivity(intent);
                                     dialog.cancel();
                                 }
@@ -255,78 +265,79 @@ public class BoarderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     Global.setSid(boardList.get(getAdapterPosition() - 1).getSid());
                     Log.d("어댑터sid", "sid는" + Global.getSid());
 
-                    JsonObject json = new JsonObject();
-
-                    json.addProperty("sid", Global.getSid());
-
-                    final ProgressDialog progressDialog = new ProgressDialog(itemView.getContext());
-                    progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                    progressDialog.setMessage("해당 댓글로 이동중~" + boardList.get(getAdapterPosition() - 1).getSid());
-                    progressDialog.show();
-
-
-                    Ion.with(itemView.getContext())
-                            .load("POST", url.getServerUrl() + "/showSche")
-                            .setHeader("Content-Type", "application/json")
-                            .setJsonObjectBody(json)
-                            .asJsonObject() //응답
-                            .setCallback(new FutureCallback<JsonObject>() {
-                                @Override
-                                public void onCompleted(Exception e, JsonObject result) {
-                                    //응답 받을 변수
-                                    String userName, schedTitle, aboutSched, schedLocation;
-                                    String startDate, startTime, endDate, endTime, startToEnd;
-
-                                    if (e != null) {
-                                        Toast.makeText(itemView.getContext(), "Server Connection Error!", Toast.LENGTH_LONG).show();
-                                    } else {
-                                        //응답 형식이 { "data":{"id":"jacob456@hanmail.net", "cid":1, "sid":10, "title":"korea"}, "message":"success"}
-                                        //data: 다음에 나오는 것들도 JsonObject형식.
-                                        //따라서 data를 JsonObject로 받고, 다시 이 data를 이용하여(어찌보면 JsonObject안에 또다른 JsonObject가 있는 것이다.
-                                        //JSONArray가 아님. 얘는 [,]로 묶여 있어야 함.
-
-                                        String message = result.get("message").getAsString();
-                                        //서버로 부터 응답 메세지가 success이면...
-
-                                        if (message.equals("success")) {
-                                            //서버 응답 오면 로딩 창 해제
-                                            progressDialog.dismiss();
-
-                                            //data: {} 에서 {}안에 있는 것들도 JsonObject
-                                            JsonObject data = result.get("data").getAsJsonObject();
-
-                                            userName = data.get("id").getAsString();
-                                            schedTitle = data.get("title").getAsString();
-                                            aboutSched = data.get("sContent").getAsString();
-                                            schedLocation = data.get("area").getAsString();
-                                            startDate = data.get("startDate").getAsString();
-                                            //startTime = data.get("startTime").getAsString();
-                                            endDate = data.get("endDate").getAsString();
-                                            //endTime = data.get("endTime").getAsString();
-
-                                            //뒤에 0.000 잘라내기
-                                            startDate = startDate.substring(0, 16);
-                                            endDate = endDate.substring(0, 16);
-                                            startToEnd = startDate + " ~ " + endDate;
-
-                                            Intent intent = new Intent(context, PlanDetailActivity.class);
-                                            intent.putExtra("userName", userName);
-                                            intent.putExtra("schedTitle", schedTitle);
-                                            intent.putExtra("aboutSched", aboutSched);
-                                            intent.putExtra("area", schedLocation);
-                                            intent.putExtra("startToEnd", startToEnd);
-
-                                            context.startActivity(intent);
-
-                                            Log.i("result", data.get("id").getAsString());
-                                        } else {
-
-                                            Toast.makeText(itemView.getContext(), "해당 일정이 없습니다.", Toast.LENGTH_LONG).show();
-                                        }
-
-                                    }
-                                }
-                            });
+                    getScheduleFromServer(Global.getSid());
+//                    JsonObject json = new JsonObject();
+//
+//                    json.addProperty("sid", Global.getSid());
+//
+//                    final ProgressDialog progressDialog = new ProgressDialog(itemView.getContext());
+//                    progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+//                    progressDialog.setMessage("해당 댓글로 이동중~" + boardList.get(getAdapterPosition() - 1).getSid());
+//                    progressDialog.show();
+//
+//
+//                    Ion.with(itemView.getContext())
+//                            .load("POST", url.getServerUrl() + "/showSche")
+//                            .setHeader("Content-Type", "application/json")
+//                            .setJsonObjectBody(json)
+//                            .asJsonObject() //응답
+//                            .setCallback(new FutureCallback<JsonObject>() {
+//                                @Override
+//                                public void onCompleted(Exception e, JsonObject result) {
+//                                    //응답 받을 변수
+//                                    String userName, schedTitle, aboutSched, schedLocation;
+//                                    String startDate, startTime, endDate, endTime, startToEnd;
+//
+//                                    if (e != null) {
+//                                        Toast.makeText(itemView.getContext(), "Server Connection Error!", Toast.LENGTH_LONG).show();
+//                                    } else {
+//                                        //응답 형식이 { "data":{"id":"jacob456@hanmail.net", "cid":1, "sid":10, "title":"korea"}, "message":"success"}
+//                                        //data: 다음에 나오는 것들도 JsonObject형식.
+//                                        //따라서 data를 JsonObject로 받고, 다시 이 data를 이용하여(어찌보면 JsonObject안에 또다른 JsonObject가 있는 것이다.
+//                                        //JSONArray가 아님. 얘는 [,]로 묶여 있어야 함.
+//
+//                                        String message = result.get("message").getAsString();
+//                                        //서버로 부터 응답 메세지가 success이면...
+//
+//                                        if (message.equals("success")) {
+//                                            //서버 응답 오면 로딩 창 해제
+//                                            progressDialog.dismiss();
+//
+//                                            //data: {} 에서 {}안에 있는 것들도 JsonObject
+//                                            JsonObject data = result.get("data").getAsJsonObject();
+//
+//                                            userName = data.get("id").getAsString();
+//                                            schedTitle = data.get("title").getAsString();
+//                                            aboutSched = data.get("sContent").getAsString();
+//                                            schedLocation = data.get("area").getAsString();
+//                                            startDate = data.get("startDate").getAsString();
+//                                            //startTime = data.get("startTime").getAsString();
+//                                            endDate = data.get("endDate").getAsString();
+//                                            //endTime = data.get("endTime").getAsString();
+//
+//                                            //뒤에 0.000 잘라내기
+//                                            startDate = startDate.substring(0, 16);
+//                                            endDate = endDate.substring(0, 16);
+//                                            startToEnd = startDate + " ~ " + endDate;
+//
+//                                            Intent intent = new Intent(context, PlanDetailActivity.class);
+//                                            intent.putExtra("userName", userName);
+//                                            intent.putExtra("schedTitle", schedTitle);
+//                                            intent.putExtra("aboutSched", aboutSched);
+//                                            intent.putExtra("area", schedLocation);
+//                                            intent.putExtra("startToEnd", startToEnd);
+//
+//                                            context.startActivity(intent);
+//
+//                                            Log.i("result", data.get("id").getAsString());
+//                                        } else {
+//
+//                                            Toast.makeText(itemView.getContext(), "해당 일정이 없습니다.", Toast.LENGTH_LONG).show();
+//                                        }
+//
+//                                    }
+//                                }
+//                            });
 
                 }
             });
@@ -334,7 +345,7 @@ public class BoarderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
 
-        void onBind(BoardPlanItem data, int position) {
+        public void onBind(BoardPlanItem data, int position) {
             this.data = data;
             this.position = position;
 
@@ -343,6 +354,85 @@ public class BoarderAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             planlocation_text.setText(data.getLocation());
             planreply_text.setText(data.getReplynum());
         }
+
+
+        public void getScheduleFromServer(int sid) {
+
+            JsonObject json = new JsonObject();
+
+            json.addProperty("sid", sid);
+
+            final ProgressDialog progressDialog = new ProgressDialog(itemView.getContext());
+            progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progressDialog.setMessage("해당 댓글로 이동중~" + boardList.get(getAdapterPosition() - 1).getSid());
+            progressDialog.show();
+
+
+            Ion.with(itemView.getContext())
+                    .load("POST", url.getServerUrl() + "/showSche")
+                    .setHeader("Content-Type", "application/json")
+                    .setJsonObjectBody(json)
+                    .asJsonObject() //응답
+                    .setCallback(new FutureCallback<JsonObject>() {
+                        @Override
+                        public void onCompleted(Exception e, JsonObject result) {
+                            //응답 받을 변수
+                            String userName, schedTitle, aboutSched, schedLocation;
+                            String startDate, startTime, endDate, endTime, startToEnd;
+
+                            if (e != null) {
+                                Toast.makeText(itemView.getContext(), "Server Connection Error!", Toast.LENGTH_LONG).show();
+                            } else {
+                                //응답 형식이 { "data":{"id":"jacob456@hanmail.net", "cid":1, "sid":10, "title":"korea"}, "message":"success"}
+                                //data: 다음에 나오는 것들도 JsonObject형식.
+                                //따라서 data를 JsonObject로 받고, 다시 이 data를 이용하여(어찌보면 JsonObject안에 또다른 JsonObject가 있는 것이다.
+                                //JSONArray가 아님. 얘는 [,]로 묶여 있어야 함.
+
+                                String message = result.get("message").getAsString();
+                                //서버로 부터 응답 메세지가 success이면...
+
+                                if (message.equals("success")) {
+                                    //서버 응답 오면 로딩 창 해제
+                                    progressDialog.dismiss();
+
+                                    //data: {} 에서 {}안에 있는 것들도 JsonObject
+                                    JsonObject data = result.get("data").getAsJsonObject();
+
+                                    userName = data.get("id").getAsString();
+                                    schedTitle = data.get("title").getAsString();
+                                    aboutSched = data.get("sContent").getAsString();
+                                    schedLocation = data.get("area").getAsString();
+                                    startDate = data.get("startDate").getAsString();
+                                    //startTime = data.get("startTime").getAsString();
+                                    endDate = data.get("endDate").getAsString();
+                                    //endTime = data.get("endTime").getAsString();
+
+                                    //뒤에 0.000 잘라내기
+                                    startDate = startDate.substring(0, 16);
+                                    endDate = endDate.substring(0, 16);
+                                    startToEnd = startDate + " ~ " + endDate;
+
+                                    Intent intent = new Intent(context, PlanDetailActivity.class);
+                                    intent.putExtra("userName", userName);
+                                    intent.putExtra("schedTitle", schedTitle);
+                                    intent.putExtra("aboutSched", aboutSched);
+                                    intent.putExtra("area", schedLocation);
+                                    intent.putExtra("startToEnd", startToEnd);
+
+                                    context.startActivity(intent);
+
+                                    Log.i("result", data.get("id").getAsString());
+                                } else {
+
+                                    Toast.makeText(itemView.getContext(), "해당 일정이 없습니다.", Toast.LENGTH_LONG).show();
+                                }
+
+                            }
+                        }
+                    });
+
+        }
+
     }
 
     class HeaderViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {

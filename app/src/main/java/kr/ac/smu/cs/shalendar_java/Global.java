@@ -1,5 +1,10 @@
 package kr.ac.smu.cs.shalendar_java;
 
+import android.app.Activity;
+import android.content.Context;
+import android.util.Log;
+
+import com.koushikdutta.ion.Ion;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
 
 class ScheduleData {

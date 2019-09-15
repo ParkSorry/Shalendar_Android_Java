@@ -1,5 +1,6 @@
 package kr.ac.smu.cs.shalendar_java;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -112,6 +113,7 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ItemRowH
 
         int calendar_ID;
         String calendarName;
+        String calendarContent;
 //        String senderName;
 //        String senderImg;
 
@@ -132,6 +134,7 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ItemRowH
 
                 @Override
                 public void onClick(View v) {
+                    MainActivity.cid = calendar_ID;
                     if (MainActivity.cid == 0) {
                         Toast.makeText(itemView.getContext(), "달력을 먼저 선택해주세요", Toast.LENGTH_SHORT).show();
                     } else {
@@ -173,7 +176,6 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ItemRowH
             {
                 @Override
                 public boolean onLongClick(View v) {
-
                     AlertDialog.Builder dialog = new AlertDialog.Builder(v.getContext());
                     dialog.setTitle("달력 수정/삭제");
                     dialog.setMessage("달력 수정, 삭제하십니까?")
@@ -181,9 +183,15 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ItemRowH
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     //여기 캘린더 수정화면으로 바꿔야함
+                                    MainActivity.cid = calendar_ID;
                                     Intent intent = new Intent(context, CreateCalendarActivity.class);
                                     //99999 캘린더 수정 코드
                                     intent.putExtra("where", 99999);
+                                    intent.putExtra("cid", MainActivity.cid);
+                                    intent.putExtra("calImage", getItem(getAdapterPosition()).getCalendarImage());
+                                    intent.putExtra("calName", calendarName);
+                                    intent.putExtra("aboutCal",calendarContent);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                     context.startActivity(intent);
                                     dialog.cancel();
                                 }
@@ -194,6 +202,8 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ItemRowH
                                 public void onClick(DialogInterface dialog, int which) {
                                     deleteCalendar(calendar_ID);
                                     Intent intent = new Intent(context, MainActivity.class);
+                                    MainActivity.cid = 0;
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                     context.startActivity(intent);
                                     dialog.cancel();
                                 }
@@ -224,12 +234,15 @@ public class SidebarAdapter extends RecyclerView.Adapter<SidebarAdapter.ItemRowH
             this.calendarName = calName;
         }
 
+        public void setCalContent(String calContent) {
+            this.calendarContent = calContent;
+        }
+
         public void setItem(SidebarItem item) {
             calendarSidebarName.setText(item.getCalendarName());
-            //setSenderName(item.getSenderName());
             setCid(item.getCalendar_ID());
             setCalName(item.getCalendarName());
-            //setSenderImg(item.getSenderImg());
+            setCalContent(item.getCalendarContent());
 
             Ion.with(calendarSidebarImage)
                     .centerCrop()

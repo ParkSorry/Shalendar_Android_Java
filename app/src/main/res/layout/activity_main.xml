@@ -104,12 +104,23 @@
                     android:layout_gravity="bottom"
                     android:clickable="true"
                     android:orientation="vertical"
-                    android:visibility="gone">
+                    android:visibility="gone"
+                    android:background="#FFFFFF">
+
+                    <ImageButton
+                        android:layout_gravity="center"
+                        android:layout_width="20dp"
+                        android:layout_height="10dp"
+                        android:id="@+id/main_downarrow"
+                        android:src="@drawable/main_ani_downarrow"
+                        android:adjustViewBounds="true"
+                        />
 
                     <android.support.v7.widget.RecyclerView
                         android:id="@+id/mainRecyclerview"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                        android:layout_height="wrap_content"
+                        android:background="#FFFFFF">
 
                     </android.support.v7.widget.RecyclerView>
 

@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -32,8 +34,10 @@ import android.widget.Toast;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import android.os.Handler;
 
 import static kr.ac.smu.cs.shalendar_java.CodeNumber.PICK_IMAGE_REQUEST;
 
@@ -42,11 +46,9 @@ import static kr.ac.smu.cs.shalendar_java.CodeNumber.PICK_IMAGE_REQUEST;
   app bar의 메뉴에서 '일정 수정', '일정 삭제' 선택시
   UpdatePlan, DeletePlanActivity로 각각 넘어간다.
  */
-public class PlanDetailActivity extends AppCompatActivity {
+public class PlanDetailActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener{
 
-
-    //댓글생성, 수정 구분을 위한 Flag
-    int buttonFlag = 0;
+    SwipeRefreshLayout mSwipeRefreshLayout;//새로고침
 
     //UserToken
     private String userToken;
@@ -69,13 +71,21 @@ public class PlanDetailActivity extends AppCompatActivity {
     private NetWorkUrl url = new NetWorkUrl();
 
 
+    final PlandetailAdapter plandetailAdapter = new PlandetailAdapter();
+
     ImageButton backButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        //댓글생성, 수정 구분을 위한 Flag
+        final int buttonFlag = 0;
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plan_detail);
+
+        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefresh);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
 
         textViewTitle = (TextView) findViewById(R.id.shareCalName);
         replySend = (ImageButton) findViewById(R.id.replysend_button);
@@ -106,8 +116,6 @@ public class PlanDetailActivity extends AppCompatActivity {
         aboutSched.setText(intent.getStringExtra("aboutSched"));
         startToEndTime.setText(intent.getStringExtra("startToEnd"));
 
-        final PlandetailAdapter plandetailAdapter = new PlandetailAdapter();
-
 
         //SharedPreference에 저장된 userToken가져오기.
         SharedPreferences pref = getSharedPreferences("pref_USERTOKEN", MODE_PRIVATE);
@@ -125,57 +133,9 @@ public class PlanDetailActivity extends AppCompatActivity {
         json.addProperty("cid", MainActivity.cid);
         json.addProperty("sid", Global.getSid());
 
-        Ion.with(getApplicationContext())
-                .load("POST", url.getServerUrl() + "/readComments")
-                .setHeader("Content-Type", "application/json")
-                .setHeader("Authorization", userToken)
-                .setJsonObjectBody(json)
-                .asJsonObject()
-                .setCallback(new FutureCallback<JsonObject>() {
-                    @Override
-                    public void onCompleted(Exception e, JsonObject result) {
 
-                        String comments, id, rdate;
-                        int commentNum;
-
-                        if (e != null) {
-                            Toast.makeText(getApplicationContext(), "Server Connection Error!", Toast.LENGTH_LONG).show();
-                        } else {
-                            //응답 형식이 { "data":{"id":"jacob456@hanmail.net", "cid":1, "sid":10, "title":"korea"}, "message":"success"}
-                            //data: 다음에 나오는 것들도 JsonObject형식.
-                            //따라서 data를 JsonObject로 받고, 다시 이 data를 이용하여(어찌보면 JsonObject안에 또다른 JsonObject가 있는 것이다.
-                            //JSONArray가 아님. 얘는 [,]로 묶여 있어야 함.
-
-                            String message = result.get("message").getAsString();
-                            //서버로 부터 응답 메세지가 success이면...
-
-                            if (message.equals("success")) {
-                                //서버 응답 오면 로딩 창 해제
-                                // progressDialog.dismiss();
-
-                                //data: {} 에서 {}안에 있는 것들도 JsonObject
-
-                                JsonArray data = result.getAsJsonArray("data");
-
-                                for (int i = 0; i < data.size(); i++) {
-                                    JsonObject jsonArr1 = data.get(i).getAsJsonObject();
-                                    commentNum = jsonArr1.get("commentNum").getAsInt();
-                                    comments = jsonArr1.get("comments").getAsString();
-                                    id = jsonArr1.get("id").getAsString();
-                                    rdate = jsonArr1.get("rdate").getAsString();
-                                    plandetailAdapter.addItem(new PlandetailItem(id, rdate, comments, commentNum));
-                                    plandetailAdapter.notifyDataSetChanged();
-                                }
-
-                                //Log.i("result",data.get("id").getAsString());
-                            } else {
-
-                                Toast.makeText(getApplicationContext(), "해당 일정이 없습니다.", Toast.LENGTH_LONG).show();
-                            }
-
-                        }
-                    }
-                });
+        //댓글읽기 코드
+        onRefresh();
 
         plandetail_Listview.setAdapter(plandetailAdapter);
         plandetailAdapter.notifyDataSetChanged();
@@ -236,7 +196,73 @@ public class PlanDetailActivity extends AppCompatActivity {
                                         }
                                     }
                                 });
+
+                        //댓글읽기 코드
+                        plandetailAdapter.items.clear();
+                        Toast.makeText(getApplicationContext(), "받아오기 시작", Toast.LENGTH_SHORT).show();
+
+
+                        Ion.with(getApplicationContext())
+                                .load("POST", url.getServerUrl() + "/readComments")
+                                .setHeader("Content-Type", "application/json")
+                                .setHeader("Authorization", userToken)
+                                .setJsonObjectBody(json)
+                                .asJsonObject()
+                                .setCallback(new FutureCallback<JsonObject>() {
+                                    @Override
+                                    public void onCompleted(Exception e, JsonObject result) {
+
+                                        String comments, id, rdate;
+                                        int commentNum;
+
+                                        if (e != null) {
+                                            Toast.makeText(getApplicationContext(), "Server Connection Error!", Toast.LENGTH_LONG).show();
+                                        } else {
+                                            //응답 형식이 { "data":{"id":"jacob456@hanmail.net", "cid":1, "sid":10, "title":"korea"}, "message":"success"}
+                                            //data: 다음에 나오는 것들도 JsonObject형식.
+                                            //따라서 data를 JsonObject로 받고, 다시 이 data를 이용하여(어찌보면 JsonObject안에 또다른 JsonObject가 있는 것이다.
+                                            //JSONArray가 아님. 얘는 [,]로 묶여 있어야 함.
+
+                                            String message = result.get("message").getAsString();
+                                            //서버로 부터 응답 메세지가 success이면...
+
+                                            if (message.equals("success")) {
+                                                //서버 응답 오면 로딩 창 해제
+                                                // progressDialog.dismiss();
+
+                                                //data: {} 에서 {}안에 있는 것들도 JsonObject
+
+                                                JsonArray data = result.getAsJsonArray("data");
+
+                                                for (int i = 0; i < data.size(); i++) {
+                                                    JsonObject jsonArr1 = data.get(i).getAsJsonObject();
+                                                    commentNum = jsonArr1.get("commentNum").getAsInt();
+                                                    comments = jsonArr1.get("comments").getAsString();
+                                                    id = jsonArr1.get("id").getAsString();
+                                                    rdate = jsonArr1.get("rdate").getAsString();
+                                                    plandetailAdapter.addItem(new PlandetailItem(id, rdate, comments, commentNum));
+                                                    plandetailAdapter.notifyDataSetChanged();
+                                                }
+
+                                                //Log.i("result",data.get("id").getAsString());
+                                            } else {
+
+                                                Toast.makeText(getApplicationContext(), "해당 일정이 없습니다.", Toast.LENGTH_LONG).show();
+                                            }
+
+                                        }
+                                    }
+                                });
+
+                        //replyInput.clearFocus();
+                        //replyInput.setText("");
+
+                        Toast.makeText(getApplicationContext(), "FLAG값"+buttonFlag, Toast.LENGTH_LONG).show();
+                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                        imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
+
                     }
+
                 }
             }
 
@@ -253,7 +279,7 @@ public class PlanDetailActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), plandetailAdapter.items.get(position - 1).getReply_name(), Toast.LENGTH_SHORT).show();
 
                 //플래그
-                buttonFlag = 1;
+                final int buttonFlag = 1;
 
                 AlertDialog.Builder dialog = new AlertDialog.Builder(view.getContext());
                 dialog.setTitle("댓글 수정/삭제");
@@ -281,12 +307,13 @@ public class PlanDetailActivity extends AppCompatActivity {
 
                                         json.addProperty("cid", MainActivity.cid);
                                         json.addProperty("sid", Global.getSid());
+
                                         //수정될 내용
                                         json.addProperty("comments", replyInputString);
                                         json.addProperty("commentNum", plandetailAdapter.items.get(position - 1).getCommentNum());
 
 
-                                        Ion.with(getApplicationContext())
+                                        Future ion = Ion.with(getApplicationContext())
                                                 .load("POST", url.getServerUrl() + "/updateComments")
                                                 .setHeader("Content-Type", "application/json")
                                                 .setHeader("Authorization", userToken)
@@ -312,15 +339,29 @@ public class PlanDetailActivity extends AppCompatActivity {
                                                             }
 
                                                         }
-                                                    }
-                                                });
 
+                                                    }
+
+                                                });
+//                                        try {
+//                                            ion.get();
+//                                        } catch (Exception e) {
+//                                            e.printStackTrace();
+//                                        }
+
+                                        replyInput.clearFocus();
+                                        replyInput.setText("");
+
+                                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                                        imm.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY,0);
+
+                                        plandetailAdapter.items.clear();
+                                        onRefresh();
                                     }
                                 });
 
 
                                 dialog.cancel();
-                                buttonFlag = 0;
                             }
                         })
 
@@ -369,10 +410,19 @@ public class PlanDetailActivity extends AppCompatActivity {
                                                 }
                                             }
                                         });
+
+                                //댓글읽어오기 코드
+                                //plandetailAdapter.items.clear();
+                                Toast.makeText(getApplicationContext(), "받아오기 시작", Toast.LENGTH_SHORT).show();
+
+                                plandetailAdapter.items.clear();
+                                onRefresh();
+
                                 dialog.cancel();
                             }
                         });
 
+                plandetailAdapter.notifyDataSetChanged();
                 AlertDialog alertDialog = dialog.create();
                 alertDialog.show();
                 return false;
@@ -386,5 +436,81 @@ public class PlanDetailActivity extends AppCompatActivity {
                 onBackPressed();
             }
         });
+    }
+
+    @Override
+    public void onRefresh() {
+        Ion.getDefault(this).configure().setLogging("ion-sample", Log.DEBUG);
+        Ion.getDefault(this).getConscryptMiddleware().enable(false);
+
+        mSwipeRefreshLayout.setRefreshing(true);
+        new Handler().postDelayed(new Runnable() {
+
+            @Override
+            public void run() {
+                plandetailAdapter.notifyDataSetChanged();
+
+                //댓글 받아오는 통시 시작
+                //서버와 통신. 헤더 부분의 정보를 서버응답으로 부터 온 정보들을 파싱하여 set한다.
+
+                JsonObject json = new JsonObject();
+                json.addProperty("cid", MainActivity.cid);
+                json.addProperty("sid", Global.getSid());
+
+                //댓글읽기 코드
+                Ion.with(getApplicationContext())
+                        .load("POST", url.getServerUrl() + "/readComments")
+                        .setHeader("Content-Type", "application/json")
+                        .setHeader("Authorization", userToken)
+                        .setJsonObjectBody(json)
+                        .asJsonObject()
+                        .setCallback(new FutureCallback<JsonObject>() {
+                            @Override
+                            public void onCompleted(Exception e, JsonObject result) {
+
+                                String comments, id, rdate;
+                                int commentNum;
+
+                                if (e != null) {
+                                    Toast.makeText(getApplicationContext(), "Server Connection Error!", Toast.LENGTH_LONG).show();
+                                } else {
+                                    //응답 형식이 { "data":{"id":"jacob456@hanmail.net", "cid":1, "sid":10, "title":"korea"}, "message":"success"}
+                                    //data: 다음에 나오는 것들도 JsonObject형식.
+                                    //따라서 data를 JsonObject로 받고, 다시 이 data를 이용하여(어찌보면 JsonObject안에 또다른 JsonObject가 있는 것이다.
+                                    //JSONArray가 아님. 얘는 [,]로 묶여 있어야 함.
+
+                                    String message = result.get("message").getAsString();
+                                    //서버로 부터 응답 메세지가 success이면...
+
+                                    if (message.equals("success")) {
+                                        //서버 응답 오면 로딩 창 해제
+                                        // progressDialog.dismiss();
+
+                                        //data: {} 에서 {}안에 있는 것들도 JsonObject
+
+                                        JsonArray data = result.getAsJsonArray("data");
+
+                                        for (int i = 0; i < data.size(); i++) {
+                                            JsonObject jsonArr1 = data.get(i).getAsJsonObject();
+                                            commentNum = jsonArr1.get("commentNum").getAsInt();
+                                            comments = jsonArr1.get("comments").getAsString();
+                                            id = jsonArr1.get("id").getAsString();
+                                            rdate = jsonArr1.get("rdate").getAsString();
+                                            plandetailAdapter.addItem(new PlandetailItem(id, rdate, comments, commentNum));
+                                            plandetailAdapter.notifyDataSetChanged();
+                                        }
+
+                                        //Log.i("result",data.get("id").getAsString());
+                                    } else {
+
+                                        Toast.makeText(getApplicationContext(), "해당 일정이 없습니다.", Toast.LENGTH_LONG).show();
+                                    }
+
+                                }
+                            }
+                        });
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        }, 1000);
     }
 }

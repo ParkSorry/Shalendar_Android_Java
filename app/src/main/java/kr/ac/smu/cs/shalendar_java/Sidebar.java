@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
@@ -115,8 +116,13 @@ public class Sidebar extends LinearLayout implements View.OnClickListener {
         TextView userName = findViewById(R.id.userName_textView);
         TextView userID = findViewById(R.id.userID_textView);
         ImageView imageView = findViewById(R.id.image_profile);
-        imageView.setBackground(new ShapeDrawable(new OvalShape()));
-        imageView.setClipToOutline(true);
+
+//        imageView.setBackground(new ShapeDrawable(new OvalShape()));
+//        if(Build.VERSION.SDK_INT >= 21) {
+//            imageView.setClipToOutline(true);
+//        }
+
+
 
         SharedPreferences pref = getContext().getSharedPreferences("pref_USERTOKEN", MODE_PRIVATE);
         userProfile_Name = pref.getString("userName", "DEFAULT :: USER");
@@ -131,6 +137,12 @@ public class Sidebar extends LinearLayout implements View.OnClickListener {
         Log.i("사용자 프로필 이미지??", userProfile_ImgURL);
 
         if (!(userProfile_ImgURL.equals("DEFAULT :: profile_IMAGE"))) {
+
+            imageView.setBackground(new ShapeDrawable(new OvalShape()));
+            if(Build.VERSION.SDK_INT >= 21) {
+                imageView.setClipToOutline(true);
+            }
+
             Ion.with(imageView)
                     .centerCrop()
                     .resize(250, 250)
@@ -139,9 +151,12 @@ public class Sidebar extends LinearLayout implements View.OnClickListener {
             Toast.makeText(getContext(), "프로필 사진을 정해보세요~", Toast.LENGTH_SHORT).show();
             Ion.with(imageView)
                     .centerCrop()
-                    .placeholder(R.drawable.face)
+                    .placeholder(R.drawable.profile_default)
                     .resize(250, 250);
         }
+
+
+
 
 
         //리사이클러
@@ -231,6 +246,7 @@ public class Sidebar extends LinearLayout implements View.OnClickListener {
                 //sitem.setSenderImg(userProfile_ImgURL);
                 sitem.setCalendarName(innerData.get("calName").getAsString());
                 sitem.setCalendarImage(innerData.get("img_url").getAsString());
+                sitem.setCalendarContent(innerData.get("calContent").getAsString());
                 sitem.setCalendar_ID(cid_Array[i]);
 
 //                String calName = innerData.get("calName").getAsString();
